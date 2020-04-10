@@ -1,0 +1,16 @@
+apiVersion : apps/v1beta1
+kind: Deployment
+metadata:
+  name: kaomegaspring 
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kaomegaspring 
+    spec:
+      containers:
+        - name: kaomegaspring 
+          image: omegacr.azurecr.io/kaomegaspring
+          ports:
+          - containerPort: 5000
