@@ -22,6 +22,8 @@ variables:
   vmImageName: 'ubuntu-latest'
 
 
+
+
 stages:
   - stage: Build
     displayName: Build stage
@@ -31,19 +33,29 @@ stages:
         pool:
           vmImage: $(vmImageName)
         steps:
-          - task: Docker@2
+          - task: Maven@2
+            inputs:
+                mavenPomFile:'pom.xml'
+                goals:'clean verify'
+                publishJUnitResults:false
+                javaHomeOption:'JDKVersion'
+                mavenVersionOption:'Default'
+                mavenAuthenticateFeed:false
+                effectivePomSkip:false
+                sonarQubeRunAnalysis:false
+          - task: Docker@3
             displayName: Build and push an image to container registry
             inputs:
-              command: buildAndPush
-              repository: $(imageRepository)
-              dockerfile: $(dockerfilePath)
-              containerRegistry: $(dockerRegistryServiceConnection)
-              tags: |
-                $(tag)
-
+                command: buildAndPush
+                repository: $(imageRepository)
+                dockerfile: $(dockerfilePath)
+                containerRegistry: $(dockerRegistryServiceConnection)
+                tags: |
+                  $(tag)
           - upload: manifests
             artifact: manifests
 
+          
   - stage: Deploy
     displayName: Deploy stage
     dependsOn: Build
