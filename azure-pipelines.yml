@@ -35,7 +35,7 @@ stages:
         steps:
           - task: Maven@2
             inputs:
-                mavenPomFile:'pom.xml'
+                mavenPomFile: 'pom.xml'
                 goals:'clean verify'
                 publishJUnitResults:false
                 javaHomeOption:'JDKVersion'
