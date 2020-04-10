@@ -1,90 +1,59 @@
-# Deploy to Azure Kubernetes Service
-# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+imageRepository: 'kaomegaspring'
+containerRegistry: 'omegacr.azurecr.io'
+dockerfilePath: '**/Dockerfile'
+tag: '$(Build.BuildId)'
+imagePullSecret: 'omegacr204649d4-auth'
+# Agent VM image name
+vmImageName: 'ubuntu-latest'
 
 trigger:
-  - master
+- master
 
-resources:
-  - repo: self
+pool:
+  vmImage: 'ubuntu-latest'
 
-variables:
+steps:
 
-  # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '3efeb1c7-c25d-4ea3-83be-c9d60596897f'
-  imageRepository: 'kaomegaspring'
-  containerRegistry: 'omegacr.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
-  imagePullSecret: 'omegacr204649d4-auth'
-
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
-
-
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean verify'
+    publishJUnitResults: false
+    javaHomeOption: 'JDKVersion'
+    mavenVersionOption: 'Default'
+    mavenAuthenticateFeed: false
+    effectivePomSkip: false
+    sonarQubeRunAnalysis: false
 
 
-stages:
-  - stage: Build
-    displayName: Build stage
-    jobs:
-      - job: Build
-        displayName: Build
-        pool:
-          vmImage: $(vmImageName)
-        steps:
-          - task: Maven@2
-            inputs:
-                mavenPomFile: 'pom.xml'
-                goals:'clean package'
-                  publishJUnitResults:false
-                  javaHomeOption:'JDKVersion'
-                  mavenVersionOption:'Default'
-                  mavenAuthenticateFeed:false
-                  effectivePomSkip:false
-                  sonarQubeRunAnalysis:false
-          - task:Docker@3
-            inputs:
-                containerRegistry:$(dockerRegistryServiceConnection)
-                repository:$(imageRepository)
-                command:buildAndPush
-                dockerfile:$(dockerfilePath)
-                tags: |
-                  $(tag)
-          - upload: manifests
-            artifact: manifests
+- task: Docker@2
+  inputs:
+    containerRegistry: 'omegacr.azurecr.io'
+    Repository: 'ka5110/OmegaSpring'
+    command: 'buildAndPush'
+    Dockerfile: '.Dockerfile'
+    tags: |
+      latest
+      $(Build.BuildId)
 
-          
-  - stage: Deploy
-    displayName: Deploy stage
-    dependsOn: Build
-
-    jobs:
-      - deployment: Deploy
-        displayName: Deploy
-        pool:
-          vmImage: $(vmImageName)
-        environment: 'ka5110OmegaSpring-6628.default'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: KubernetesManifest@0
-                  displayName: Create imagePullSecret
-                  inputs:
-                    action: createSecret
-                    secretName: $(imagePullSecret)
-                    dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-                - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
-                  inputs:
-                    action: deploy
-                    manifests: |      
-                      $(Pipeline.Workspace)/manifests/backend-deployment.yml
-                      $(Pipeline.Workspace)/manifests/LoadBalancerService.yml
-                    imagePullSecrets: |
-                      $(imagePullSecret)
-                    containers: |
-                      $(containerRegistry)/$(imageRepository):$(tag)
-
+- task: KubernetesManifest@0
+  displayName: Deploy to Kubernetes cluster
+  inputs:
+    action: deploy
+    manifests: |
+    $(Pipeline.Workspace)/manifests/backend-deployment.yml
+    $(Pipeline.Workspace)/manifests/LoadBalancerService.yml
+    bimagePullSecrets:|
+    $(imagePullSecret)
+    containers:| 
+    $(containerRegistry)/$(imageRepository) : $(tag)
