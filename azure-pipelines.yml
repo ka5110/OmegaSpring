@@ -38,13 +38,12 @@ stages:
                 mavenPomFile: 'pom.xml'
                 goals:'clean package'
                   publishJUnitResults:false
-                javaHomeOption:'JDKVersion'
-                mavenVersionOption:'Default'
-                mavenAuthenticateFeed:false
-                effectivePomSkip:false
-                sonarQubeRunAnalysis:false
+                  javaHomeOption:'JDKVersion'
+                  mavenVersionOption:'Default'
+                  mavenAuthenticateFeed:false
+                  effectivePomSkip:false
+                  sonarQubeRunAnalysis:false
           - task: Docker@3
-            displayName: Build and push an image to container registry
             inputs:
                 command: buildAndPush
                 repository: $(imageRepository)
