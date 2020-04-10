@@ -2,7 +2,7 @@ package com.project.omega.bean.dao;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.transaction.annotation.Transactional;
-
+//some extra stuff
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 
