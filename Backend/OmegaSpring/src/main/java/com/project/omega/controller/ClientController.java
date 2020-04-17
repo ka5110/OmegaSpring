@@ -7,6 +7,10 @@ import com.project.omega.exceptions.ClientNotFoundException;
 import com.project.omega.exceptions.NoRecordsFoundException;
 import com.project.omega.repository.ClientRepository;
 import com.project.omega.service.interfaces.ClientService;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.Personalization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +29,28 @@ public class ClientController {
     @Autowired
     ClientService clientService;
 
+
     private ObjectMapper mapper = new ObjectMapper();
 
 
     @PostMapping (value= "/create",  headers = "Accept=application/json")
-    public ResponseEntity<Client> createClient(@RequestBody Client client) {
+    public ResponseEntity<Client> createClient(@RequestBody Client client) throws Exception {
         Client newClient  = clientService.createClient(client);
+
+        Mail mail = new Mail();
+        Email fromEmail = new Email();
+        mail.setFrom(fromEmail);
+
+        Personalization personalization = new Personalization();
+        Email to = new Email();
+        to.setName("emailPojo.getToName()");
+        to.setEmail("khalil.alhabal@gmail.com");
+        personalization.addTo(to);
+
+//
+//        String email = "khalil.alhabal@gmail.com";
+//        sendEmail(email);
+
 
         return new ResponseEntity(newClient, HttpStatus.CREATED);
 
@@ -71,11 +91,9 @@ public class ClientController {
         Client client = clientService.updateClientById(id, updated);
         return new ResponseEntity(client, HttpStatus.OK);
 
-
-
-
-
     }
+
+
 }
 
 
